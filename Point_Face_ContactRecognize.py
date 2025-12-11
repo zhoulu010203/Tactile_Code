@@ -24,6 +24,56 @@ import csv
 import datetime
 import os
 
+
+# ==========================================
+# 新增类：移植自 sigetongdaodanduduqu.py
+# ==========================================
+class FourChannelADC:
+    def __init__(self, port, baud):
+        self.ser = serial.Serial(port, baud, timeout=0.1)
+        self.buffer = ""
+        # 存储最近一次完整的4个通道数据，默认为0，防止一开始读不到报错
+        self.last_valid_values = [0.0, 0.0, 0.0, 0.0]
+        self.adc_row = []
+
+    def read_latest(self):
+        """尝试读取串口数据并更新 last_valid_values"""
+        if self.ser.in_waiting > 0:
+            try:
+                raw_chunk = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
+                self.buffer += raw_chunk
+
+                if ',' in self.buffer:
+                    parts = self.buffer.split(',')
+                    # 最后一个部分可能不完整，留回 buffer
+                    valid_parts = parts[:-1]
+                    self.buffer = parts[-1]
+
+                    for part in valid_parts:
+                        # 清洗数据 (去 /，去空格)
+                        val_str = part.replace('/', '').strip()
+                        if val_str:
+                            self.adc_row.append(val_str)
+
+                        # 凑齐4个数据 -> 更新最新值
+                        if len(self.adc_row) == 4:
+                            try:
+                                self.last_valid_values = [float(x) for x in self.adc_row]
+                            except ValueError:
+                                pass
+                            self.adc_row = []  # 清空准备下一组
+            except Exception as e:
+                print(f"ADC Error: {e}")
+
+        return self.last_valid_values
+
+    def close(self):
+        if self.ser.is_open:
+            self.ser.close()
+
+
+# ==========================================
+
 mapping = np.array([
     [0, 2, 4, 6, 1, 3, 5, 7],
     [14, 12, 10, 8, 9, 11, 13, 15],
@@ -79,7 +129,7 @@ csv_filename = f"tactile_data_{timestamp_str}.csv"
 f_csv = open(csv_filename, 'w', newline='')
 writer = csv.writer(f_csv)
 # 表头：时间, 传感器总力, 分配后的力(数组形式)
-writer.writerow(["Timestamp", "Force_Sensor", "F_distributed", "Component_Means"])
+writer.writerow(["Timestamp", "Force_Sensor", "CH1", "CH2", "CH3", "CH4", "F_distributed", "Component_Means"])
 print(f"数据将保存至: {csv_filename}")
 
 try:
@@ -88,11 +138,25 @@ try:
     ser3 = serial.Serial('COM9', 115200)
     sensor = ForceSensorReader('COM6', 2400)
 
+    # 【新增】初始化 ADC 传感器
+    try:
+        adc_sensor = FourChannelADC('COM13', 115200)
+        print("ADC (COM13) 连接成功")
+    except Exception as e:
+        print(f"ADC 连接失败: {e}")
+        adc_sensor = None  # 标记为 None，后续逻辑会处理
+
     while True:
         # --- 2. 每次循环开始初始化保存变量 ---
         # 如果这一轮循环没有计算出F_distributed（例如无接触），我们存为 "N/A" 或 空列表
         save_f_distributed = 0
         save_component_means = 0
+
+        # 【新增】读取 ADC 数据
+        # 默认值为 0，如果传感器正常则更新为最新读取值
+        adc_values = [0, 0, 0, 0]
+        if adc_sensor:
+            adc_values = adc_sensor.read_latest()
 
         # 读取三个串口的数据
         data1 = ser1.readline().decode().strip()
@@ -211,7 +275,7 @@ try:
 
         # --- 4. 写入 CSV 文件 ---
         current_time = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 精确到毫秒
-        writer.writerow([current_time, force, save_f_distributed, save_component_means])
+        writer.writerow([current_time, force, adc_values[0], adc_values[1], adc_values[2], adc_values[3], save_f_distributed, save_component_means])
         # 刷新缓冲区，确保即使强制中断，最近的数据也已写入硬盘
         f_csv.flush()
 
