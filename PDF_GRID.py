@@ -29,6 +29,6 @@ def pdf_grid(GMM, x_start, x_end, y_start, y_end, step):
 
     # 恢复为二维矩阵
     pdf_mat = pdf_values.reshape(xx.shape)
-    # pdf_mat = np.flipud(pdf_mat)  # 上下翻转矩阵
+    pdf_mat = np.flipud(pdf_mat)  # 上下翻转矩阵
     # return xx, yy, pdf_mat
     return pdf_mat

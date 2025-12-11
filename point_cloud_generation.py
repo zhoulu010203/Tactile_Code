@@ -12,8 +12,8 @@ def generate_point_cloud(tactile_image, binary_image=None, spacing=1,
         tactile_image: 触觉图像（概率密度图）
         binary_image: 二值图像（可选，用于限制生成区域）
         spacing: 网格间距（mm）
-        mu_pointcloud: 对数正态分布的均值
-        sigma_pointcloud: 对数正态分布的协方差矩阵
+        mu_pointcloud: 正态分布的均值
+        sigma_pointcloud: 正态分布的协方差矩阵
         min_points: 每个像素生成点的最小数量阈值
         scale_factor: 概率密度到点数的缩放因子
 
@@ -28,6 +28,10 @@ def generate_point_cloud(tactile_image, binary_image=None, spacing=1,
     # 将参数转换为numpy数组
     mu = np.array(mu_pointcloud)
     sigma = np.array(sigma_pointcloud)
+
+    # 计算理论众数用于去中心化（对数高斯分布需要）
+    sigma_diag = np.diag(sigma)
+    theoretical_mode = np.exp(mu - sigma_diag)
 
     for i in range(rows):
         for j in range(cols):
@@ -44,11 +48,18 @@ def generate_point_cloud(tactile_image, binary_image=None, spacing=1,
                 center_x = (j + 1) * spacing
                 center_y = (rows - i) * spacing
 
-                # 生成对数正态分布样本
-                samples = np.abs(np.random.multivariate_normal(mu, sigma, size=n_points))
-                # 随机符号（四象限分布）
-                signs = np.random.choice([-1, 1], size=samples.shape)
-                samples = samples * signs
+                # 生成高斯分布样本
+                samples = np.random.multivariate_normal(mu, sigma, size=n_points)
+                # # 随机符号（四象限分布）
+                # signs = np.random.choice([-1, 1], size=samples.shape)
+                # samples = samples * signs
+
+                # 生成对数高斯分布
+                normal_samples = np.random.multivariate_normal(mu, sigma, size=n_points)
+                log_samples = np.exp(normal_samples)
+
+                # 关键：减去众数，使其对齐像素中心
+                samples = log_samples - theoretical_mode
 
                 # 平移至目标中心点
                 samples[:, 0] += center_x

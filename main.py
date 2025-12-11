@@ -1,3 +1,13 @@
+'''
+6×8阵列式传感器触觉重构算法
+高斯混合模型（点接触）
+EM算法求解
+区域连通检测K
+点面（线）识别：单个连通区域响应点数是否大于4
+面接触下使用双线性插值呈现
+点云生成策略：高斯/对数高斯
+'''
+
 from sklearn.mixture import GaussianMixture
 from Find_Union import UnionFind
 from GMM_Generate import GaussianMixture2D
@@ -25,24 +35,21 @@ fig = plt.figure(figsize=(10, 7))
 ax = fig.add_subplot(111, projection='3d')
 
 # 初始化显示一个平面
-x = np.linspace(0, 5, 30)
-y = np.linspace(0, 5, 30)
+x = np.linspace(0, 10, 30)
+y = np.linspace(0, 10, 30)
 X, Y = np.meshgrid(x, y)
 Z_plane = np.zeros_like(X)  # 创建平面
 
-# # 绘制初始平面
-# ax.plot_surface(X, Y, Z_plane, cmap='viridis', alpha=0.7)
-# ax.set_title("Tactile Sensor - Waiting for Data")
+# 3D高斯曲面
+# 生成网格
+grid = np.column_stack([X.ravel(), Y.ravel()])
+
+# 设置坐标轴标签和范围
 # ax.set_xlabel("X (mm)")
 # ax.set_ylabel("Y (mm)")
-# ax.set_zlabel("Height")
+# ax.set_zlabel("Probability Density")
 # ax.set_xlim(0, 10)
 # ax.set_ylim(0, 10)
-# ax.set_zlim(0, 1)  # 设置固定的Z轴范围以便比较
-
-# 显示初始图形
-# plt.draw()
-# plt.pause(0.1)
 
 try:
     ser = serial.Serial('COM3', 115200)  # 修改为你的串口和波特率
@@ -50,14 +57,14 @@ try:
     while True:
         # start_time = time.time()
         # # 仿真高斯参数
-        # means_sim = [[1.5, 1.5], [2.5, 2.5]]
+        # means_sim = [[1.5, 1.5], [4.5, 4.5]]
         # covariances_sim = [[[0.4, 0], [0, 0.4]], [[0.4, 0], [0, 0.4]]]
         # weights_sim = [40, 60]
         # GMM = GaussianMixture2D(means_sim, covariances_sim, weights_sim)  # 生成指定高斯混合函数
         # tactile_image = pdf_grid(GMM, 1, 9, 1, 9, 1)  # 根据GMM生成对应触觉像素点的概率密度值
-        # print(tactile_image)
+        # # print(tactile_image)
         # binary_image = (tactile_image * 100 >= 2).astype(int)  # 生成对应二值图像
-        # print(binary_image)
+        # # print(binary_image)
 
         data = ser.readline().decode().strip()  # 读取一行数据
         values = [float(x) for x in data.split(',')]  # 直接转换为浮点数列表
@@ -73,16 +80,13 @@ try:
             ax.plot_surface(X, Y, Z_plane, cmap='viridis', alpha=0.7)
             ax.set_title("No Contact Detected")
         else:
-            # 有接触，进行高斯曲面拟合
-            # 初始化并查集（集合合并和查询）结构
-            uf = UnionFind()
-
+            # 存在点接触，进行高斯曲面拟合
             # 使用连通区域标记函数
             labels, num_components = connected_component_labeling(binary_image)
             count_pattern = count_patterns(binary_image)
             if count_pattern:
                 num_components = num_components + count_pattern
-            print(num_components)
+            # print(num_components)
 
             # 生成点云
             PointsCloud, point_counts = generate_point_cloud(
@@ -104,10 +108,6 @@ try:
                 gmm = GaussianMixture(n_components=num_components, covariance_type='spherical', random_state=0)
                 gmm.fit(PointsCloud)
 
-                # 3D高斯曲面
-                # 生成网格
-                grid = np.column_stack([X.ravel(), Y.ravel()])
-
                 # 计算 GMM 概率密度
                 log_prob = gmm.score_samples(grid)
                 Z = np.exp(log_prob).reshape(X.shape)
@@ -121,12 +121,6 @@ try:
 
                 ax.set_title(f"Contact Detected (Components: {num_components})")
 
-        # 设置坐标轴标签和范围
-        ax.set_xlabel("X (mm)")
-        ax.set_ylabel("Y (mm)")
-        ax.set_zlabel("Probability Density")
-        ax.set_xlim(0, 5)
-        ax.set_ylim(0, 5)
         ax.set_zlim(0, 1)  # 保持固定的Z轴范围
 
         # 更新图形
@@ -141,9 +135,9 @@ except KeyboardInterrupt:
     print("程序被用户中断")
 except Exception as e:
     print(f"发生错误: {e}")
-finally:
-    # 关闭串口和图形
-    if 'ser' in locals() and ser.is_open:
-        ser.close()
-    plt.ioff()
-    plt.show()
+# finally:
+#     # 关闭串口和图形
+#     if 'ser' in locals() and ser.is_open:
+#         ser.close()
+#     plt.ioff()
+#     plt.show()
