@@ -15,7 +15,7 @@ from PDF_GRID import pdf_grid
 from connected_component_labeling import connected_component_labeling, visualize_labeled_regions
 from point_cloud_generation import generate_point_cloud, visualize_point_cloud
 from PatternRecognition import count_patterns
-from Face_contact_test import plot_tactile_simple
+from Test_Face_contact import plot_tactile_simple
 import numpy as np
 import matplotlib.pyplot as plt
 import serial
