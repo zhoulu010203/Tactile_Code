@@ -140,7 +140,7 @@ def realtime_recognition():
         # 如果显示几何图形，先画个初始状态
         draw_geometry(ax, -1, 0)
 
-    print("\n=== 视觉化识别开始 ===")
+    print("\n=== 识别开始 ===")
 
     try:
         while plt.fignum_exists(fig.number):
@@ -174,9 +174,9 @@ def realtime_recognition():
                 draw_geometry(ax, shape_idx, confidence)
                 # 在窗口顶部显示置信度
                 if shape_idx != -1:
-                    ax.set_title(f"AI Recognition Result\n{info_text}", fontsize=14)
+                    ax.set_title(f"Recognition Result\n{info_text}", fontsize=14)
                 else:
-                    ax.set_title("AI Recognition Result\nWaiting...", fontsize=14)
+                    ax.set_title("Recognition Result\nWaiting...", fontsize=14)
 
             plt.pause(0.02)
 

@@ -21,9 +21,9 @@ mapping = np.array([
     [39, 37, 35, 33, 47, 45, 43, 41]
 ])
 
-ser1 = serial.Serial('COM3', 115200)
-ser2 = serial.Serial('COM10', 115200)
-ser3 = serial.Serial('COM9', 115200)
+ser1 = serial.Serial('COM12', 115200)
+ser2 = serial.Serial('COM15', 115200)
+ser3 = serial.Serial('COM14', 115200)
 
 try:
     while True:
@@ -52,6 +52,7 @@ try:
         test = flat_image[mapping].reshape(6, 8)
         print(test)
         tactile_image = flat_image_transformed[mapping].reshape(6, 8).round(1)
+        tactile_image[1, 4] = 0.1 # 这个传感器不稳定
         F_sum = np.sum(flat_image_transformed[flat_image_transformed > 0.12])
         # print(F_sum)
         print(tactile_image)
