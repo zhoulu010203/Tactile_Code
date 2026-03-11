@@ -70,7 +70,7 @@ mapping = np.array([
     [39, 37, 35, 33, 47, 45, 43, 41]
 ])
 
-SHOW_KEYBOARD = False
+SHOW_KEYBOARD = True
 p1 = 1.763
 p2 = -0.1261
 mu_pointcloud = [0.0, 0.0]
@@ -84,7 +84,7 @@ spacing = 10
 # ==========================================
 plt.ion()
 # 初始化键盘，参数对应你的物理尺寸 80mm x 60mm
-my_keyboard = MatrixKeyboard(x_range=(0, 80), y_range=(0, 60))
+my_keyboard = MatrixKeyboard(x_range=(10, 80), y_range=(10, 60))
 # 调整 figure 尺寸，宽屏更适合展示对比
 fig = plt.figure(figsize=(14, 6), facecolor='white')
 
@@ -163,9 +163,9 @@ try:
         # values2 = [float(x) for x in data2.split(',')]
         # values3 = [float(x) for x in data3.split(',')]
 
-        values1 = [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        values1 = [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]
         values2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-        values3 = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+        values3 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0]
 
         tactile_image = np.array(values1 + values2 + values3).reshape(6, 8)
         flat_image = tactile_image.flatten()

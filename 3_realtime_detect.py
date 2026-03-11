@@ -9,7 +9,7 @@ import os
 
 # ================= 配置区域 =================
 # 1. 硬件与模型配置 (保持不变)
-THRESHOLD_VALUE = 0.2
+THRESHOLD_VALUE = 0.3
 MODEL_FILE = 'shape_model.pkl'
 
 # 2. 可视化配置 【关键修改】
@@ -32,9 +32,9 @@ class SensorDevice:
 
         print("正在连接硬件传感器 (COM3, COM10, COM9)...")
         try:
-            self.ser1 = serial.Serial('COM3', 115200, timeout=0.1)
-            self.ser2 = serial.Serial('COM10', 115200, timeout=0.1)
-            self.ser3 = serial.Serial('COM9', 115200, timeout=0.1)
+            self.ser1 = serial.Serial('COM13', 115200, timeout=0.1)
+            self.ser2 = serial.Serial('COM15', 115200, timeout=0.1)
+            self.ser3 = serial.Serial('COM12', 115200, timeout=0.1)
             print("所有串口连接成功！")
         except serial.SerialException as e:
             print(f"串口连接失败: {e}")
@@ -78,7 +78,7 @@ def draw_geometry(ax, shape_idx, confidence):
     ax.axis('off')  # 隐藏坐标轴刻度
 
     # 颜色逻辑：置信度高显示绿色，低显示橙色
-    color = '#32CD32' if confidence > 0.8 else '#FFA500'  # LimeGreen or Orange
+    color = '#32CD32' if confidence > 0.8 else '#32CD32'  # LimeGreen or Orange
 
     if shape_idx == -1:
         # === 无接触状态 ===
@@ -154,7 +154,7 @@ def realtime_recognition():
             confidence = 0.0
             info_text = ""
 
-            if np.sum(frame) > 0:  # 有按压
+            if np.sum(frame) > 0.1:  # 有按压
                 flat_data = frame.flatten().reshape(1, -1)
                 pred_idx = int(model.predict(flat_data)[0])
                 probs = model.predict_proba(flat_data)[0]
@@ -174,7 +174,7 @@ def realtime_recognition():
                 draw_geometry(ax, shape_idx, confidence)
                 # 在窗口顶部显示置信度
                 if shape_idx != -1:
-                    ax.set_title(f"Recognition Result\n{info_text}", fontsize=14)
+                    ax.set_title(f"Recognition Result\n", fontsize=14)
                 else:
                     ax.set_title("Recognition Result\nWaiting...", fontsize=14)
 

@@ -5,7 +5,7 @@ import time
 
 
 class MatrixKeyboard:
-    def __init__(self, x_range=(0, 80), y_range=(0, 60), rows=5, cols=7):
+    def __init__(self, x_range=(10, 80), y_range=(10, 60), rows=5, cols=7):
         """
         初始化虚拟矩阵键盘
         :param x_range: 物理尺寸 X 范围 (min, max)，单位 mm

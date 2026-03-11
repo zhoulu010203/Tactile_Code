@@ -204,6 +204,7 @@ try:
             if count_pattern:
                 num_components = num_components + count_pattern
 
+            # if True:
             if count_ones <= 4 * num_components:  # 如果是点接触进行高斯混合模型拟合
                 # 生成点云
                 PointsCloud, point_counts = generate_point_cloud(
@@ -248,6 +249,8 @@ try:
                     ax.plot_surface(X, Y, Z, cmap='viridis', edgecolor='none', alpha=0.8)
                     ax.set_title(f"Contact Detected (Components: {num_components})")
                     ax.set_zlim(0, 0.005)  # 保持固定的Z轴范围
+                    # ax.view_init(elev=90, azim=-90)
+                    ax.set_zticklabels([])
 
                     # # 原始点云也画出来（作为参考）
                     # ax.scatter(PointsCloud[:, 0], PointsCloud[:, 1], np.zeros_like(PointsCloud[:, 0]),
